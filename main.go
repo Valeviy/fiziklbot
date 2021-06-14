@@ -1,4 +1,4 @@
-package fiziklbot
+package main
 
 import (
 	"encoding/json"

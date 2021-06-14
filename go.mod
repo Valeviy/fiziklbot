@@ -1,4 +1,4 @@
-module fiziklbot
+module github.com/Valeviy/fiziklbot
 
 go 1.16
 
