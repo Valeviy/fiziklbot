@@ -1,3 +1,3 @@
 package commands
 
-const START = "/start"
+const START = "start"
