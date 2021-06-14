@@ -1,8 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"github.com/Valeviy/fiziklbot/telegram"
 	"log"
 	"os"
 
@@ -14,52 +13,15 @@ import (
 )
 
 var (
-	bot      *tgbotapi.BotAPI
-	botToken = os.Getenv("TOKEN")
-	baseURL  = os.Getenv("BASE_URL")
+	bot *tgbotapi.BotAPI
+	err error
 )
-
-func initTelegram() {
-	var err error
-
-	bot, err = tgbotapi.NewBotAPI(botToken)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	url := baseURL + bot.Token
-	_, err = bot.SetWebhook(tgbotapi.NewWebhook(url))
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func webhookHandler(c *gin.Context) {
-	defer c.Request.Body.Close()
-
-	bytes, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	var update tgbotapi.Update
-	err = json.Unmarshal(bytes, &update)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// to monitor changes run: heroku logs --tail
-	log.Printf("From: %+v Text: %+v\n", update.Message.From, update.Message.Text)
-}
 
 func main() {
 	port := os.Getenv("PORT")
 
 	if port == "" {
-		log.Fatal("$PORT must be set")
+		log.Fatal("PORT must be set")
 	}
 
 	// gin router
@@ -67,10 +29,15 @@ func main() {
 	router.Use(gin.Logger())
 
 	// telegram
-	initTelegram()
-	router.POST("/"+bot.Token, webhookHandler)
+	bot, err = telegram.InitTelegram()
+	if err != nil {
+		log.Fatal("Bot not initialised")
+	}
 
-	err := router.Run(":" + port)
+	router.POST("/"+bot.Token, telegram.WebhookHandler)
+
+	err = router.Run(":" + port)
+
 	if err != nil {
 		log.Println(err)
 	}
